@@ -22,7 +22,6 @@
     "express-session": "^1.18.2",
     "mysql2": "^3.14.4",
     "passport": "^0.7.0",
-    "passport-facebook": "^3.0.0",
     "passport-google-oauth20": "^2.0.0",
     "passport-linkedin-oauth2": "^2.0.0"
   }
