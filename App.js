@@ -20,7 +20,7 @@ db.connect((err) => {
     console.error('Database connection failed:', err.stack);
     return;
   }
-  console.log('Connected to Amazon RDS.');
+  console.log('Connected to Database.');
   db.query(`CREATE TABLE IF NOT EXISTS users (
     id VARCHAR(255) PRIMARY KEY,
     displayName VARCHAR(255),
@@ -46,6 +46,7 @@ passport.use(new GitHubStrategy({
     callbackURL: "http://localhost:3000/auth/github/callback"
   },
   function(accessToken, refreshToken, profile, done) {
+
     const user = {
       id: profile.id,
       displayName: profile.displayName || profile.username,
@@ -64,12 +65,25 @@ app.get('/auth/github',
   passport.authenticate('github', { scope: [ 'user:email' ] })
 );
 
-app.get('/auth/github/callback',
-  passport.authenticate('github', { failureRedirect: '/' }),
-  (req, res) => {
-    res.redirect('/profile');
-  }
-);
+app.get('/auth/github/callback', (req, res, next) => {
+  passport.authenticate('github', (err, user, info) => {
+    if (err) {
+      console.error('GitHub token error:', err);
+      return res.status(500).send('Authentication failed. Please try again.');
+    }
+    if (!user) {
+      console.warn('GitHub login failed:', info);
+      return res.redirect('/?error=login_failed');
+    }
+    req.logIn(user, (err) => {
+      if (err) {
+        console.error('GitHub login session error:', err);
+        return res.status(500).send('Session error. Please try again.');
+      }
+      return res.redirect('/profile');
+    });
+  })(req, res, next);
+});
 
 // Google Strategy stays the same
 passport.use(new GoogleStrategy({
@@ -98,12 +112,25 @@ app.get('/auth/google',
   passport.authenticate('google', { scope: ['profile', 'email'] })
 );
 
-app.get('/auth/google/callback',
-  passport.authenticate('google', { failureRedirect: '/' }),
-  (req, res) => {
-    res.redirect('/profile');
-  }
-);
+app.get('/auth/google/callback', (req, res, next) => {
+  passport.authenticate('google', (err, user, info) => {
+    if (err) {
+      console.error('Google token error:', err);
+      return res.status(500).send('Authentication failed. Please try again.');
+    }
+    if (!user) {
+      console.warn('Google login failed:', info);
+      return res.redirect('/?error=login_failed');
+    }
+    req.logIn(user, (err) => {
+      if (err) {
+        console.error('Google login session error:', err);
+        return res.status(500).send('Session error. Please try again.');
+      }
+      return res.redirect('/profile');
+    });
+  })(req, res, next);
+});
 
 app.get('/profile', (req, res) => {
   if (!req.isAuthenticated()) return res.redirect('/');
