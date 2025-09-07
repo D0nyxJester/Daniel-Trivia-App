@@ -3,7 +3,7 @@ const path = require('path');
 require('dotenv').config();
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
-const LinkedInStrategy = require('passport-linkedin-oauth2').Strategy;
+const GitHubStrategy = require('passport-github2').Strategy;  
 const session = require('express-session');
 const mysql = require('mysql2');
 
@@ -21,7 +21,6 @@ db.connect((err) => {
     return;
   }
   console.log('Connected to Amazon RDS.');
-  // Create users table if not exists
   db.query(`CREATE TABLE IF NOT EXISTS users (
     id VARCHAR(255) PRIMARY KEY,
     displayName VARCHAR(255),
@@ -35,58 +34,61 @@ const app = express();
 app.use(session({ secret: process.env.SESSION_SECRET, resave: false, saveUninitialized: true }));
 app.use(passport.initialize());
 app.use(passport.session());
+
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-passport.use(new LinkedInStrategy({
-  clientID: process.env.LINKEDIN_CLIENT_ID,
-  clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
-  callbackURL: 'http://localhost:3000/auth/linkedin/callback',
-  scope: ['r_emailaddress', 'r_liteprofile'],
-},
-function(accessToken, refreshToken, profile, done) {
-  const user = {
-    id: profile.id,
-    displayName: profile.displayName,
-    email: profile.emails && profile.emails[0] ? profile.emails[0].value : null,
-    provider: profile.provider || 'linkedin'
-  };
-  db.query('REPLACE INTO users SET ?', user, (err) => {
-    if (err) console.error('DB error:', err);
-    return done(null, profile);
-  });
-}
-));
-
-app.get('/auth/linkedin',
-  passport.authenticate('linkedin', { state: true })
-);
-
-app.get('/auth/linkedin/callback',
-  passport.authenticate('linkedin', { failureRedirect: '/' }),
-  (req, res) => {
-    res.redirect('/profile');
-  }
-);
-
-passport.use(new GoogleStrategy({
-  clientID: process.env.GOOGLE_CLIENT_ID,
-  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: '/auth/google/callback'
+// GitHub Strategy
+passport.use(new GitHubStrategy({
+    clientID: process.env.GITHUB_CLIENT_ID,
+    clientSecret: process.env.GITHUB_CLIENT_SECRET,
+    callbackURL: "http://localhost:3000/auth/github/callback"
   },
   function(accessToken, refreshToken, profile, done) {
     const user = {
       id: profile.id,
-      displayName: profile.displayName,
+      displayName: profile.displayName || profile.username,
       email: profile.emails && profile.emails[0] ? profile.emails[0].value : null,
-      provider: profile.provider || 'google'
+      provider: profile.provider || 'github'
     };
     db.query('REPLACE INTO users SET ?', user, (err) => {
       if (err) console.error('DB error:', err);
       return done(null, profile);
     });
   }
+));
+
+// GitHub routes
+app.get('/auth/github',
+  passport.authenticate('github', { scope: [ 'user:email' ] })
+);
+
+app.get('/auth/github/callback',
+  passport.authenticate('github', { failureRedirect: '/' }),
+  (req, res) => {
+    res.redirect('/profile');
+  }
+);
+
+// Google Strategy stays the same
+passport.use(new GoogleStrategy({
+  clientID: process.env.GOOGLE_CLIENT_ID,
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  callbackURL: '/auth/google/callback'
+},
+function(accessToken, refreshToken, profile, done) {
+  const user = {
+    id: profile.id,
+    displayName: profile.displayName,
+    email: profile.emails && profile.emails[0] ? profile.emails[0].value : null,
+    provider: profile.provider || 'google'
+  };
+  db.query('REPLACE INTO users SET ?', user, (err) => {
+    if (err) console.error('DB error:', err);
+    return done(null, profile);
+  });
+}
 ));
 
 passport.serializeUser((user, done) => done(null, user));
@@ -105,7 +107,7 @@ app.get('/auth/google/callback',
 
 app.get('/profile', (req, res) => {
   if (!req.isAuthenticated()) return res.redirect('/');
-  res.send(`Hello, ${req.user.displayName}`);
+  res.send(`Hello ${req.user.displayName}, welcome to my website!`);
 });
 
 app.listen(3000, () => console.log('Server started on http://localhost:3000'));

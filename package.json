@@ -17,12 +17,15 @@
   },
   "homepage": "https://github.com/D0nyxJester/Daniel-Social-Media-Login-Page#readme",
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
     "express-session": "^1.18.2",
     "mysql2": "^3.14.4",
     "passport": "^0.7.0",
+    "passport-github2": "^0.1.12",
     "passport-google-oauth20": "^2.0.0",
-    "passport-linkedin-oauth2": "^2.0.0"
+    "passport-linkedin-oauth2": "^2.0.0",
+    "passport-local": "^1.0.0"
   }
 }
