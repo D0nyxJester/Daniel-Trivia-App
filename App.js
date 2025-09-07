@@ -20,7 +20,7 @@ db.connect((err) => {
     console.error('Database connection failed:', err.stack);
     return;
   }
-  console.log('Connected to Database.');
+  console.log('Connected to MySql Database.');
   db.query(`CREATE TABLE IF NOT EXISTS users (
     id VARCHAR(255) PRIMARY KEY,
     displayName VARCHAR(255),
@@ -134,7 +134,39 @@ app.get('/auth/google/callback', (req, res, next) => {
 
 app.get('/profile', (req, res) => {
   if (!req.isAuthenticated()) return res.redirect('/');
-  res.send(`Hello ${req.user.displayName}, welcome to my website!`);
+  db.query('SELECT email, provider FROM users WHERE id = ?', [req.user.id], (err, results) => {
+    if (err) {
+      console.error('DB error:', err);
+      return res.status(500).send('Error retrieving user info.');
+    }
+    const email = results[0]?.email || 'N/A';
+    const provider = results[0]?.provider || 'N/A';
+    res.send(`Hello ${req.user.displayName}, welcome to my website!<br>
+      Email: ${email}<br>
+      Provider: ${provider}<br>
+      <form action="/logout" method="POST">
+        <button type="submit">Logout</button>
+      </form>`);
+  });
+});
+
+app.post('/logout', (req, res) => {
+  if (req.user && req.user.id) {
+    db.query('DELETE FROM users WHERE id = ?', [req.user.id], (err) => {
+      if (err) console.error('Error deleting user:', err);
+      req.logout(() => {
+        req.session.destroy(() => {
+          res.redirect('/');
+        });
+      });
+    });
+  } else {
+    req.logout(() => {
+      req.session.destroy(() => {
+        res.redirect('/');
+      });
+    });
+  }
 });
 
 app.listen(3000, () => console.log('Server started on http://localhost:3000'));
