@@ -15,7 +15,10 @@ const db = mysql.createConnection({
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  port: process.env.DB_PORT
+  port: process.env.DB_PORT,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
 });
 
 db.connect((err) => {
@@ -37,9 +40,9 @@ db.connect((err) => {
   db.query(`CREATE TABLE IF NOT EXISTS trivia_results (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id VARCHAR(255),
+  question_difficulty VARCHAR(40),
+  question_category VARCHAR(100),
   question TEXT,
-  user_answer VARCHAR(255),
-  is_correct BOOLEAN,
   correct_answer VARCHAR(255),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )`);
@@ -150,20 +153,12 @@ app.get('/auth/google/callback', (req, res, next) => {
 });
 
 app.get('/profile', (req, res) => {
-  if (!req.isAuthenticated()) return res.send(`
-    <html>
-      <head>
-        <meta http-equiv="refresh" content="3;url=/" />
-      </head>
-      <body>
-        <h2>Error: You must be logged in to view this page.</h2>
-        <p>You will be redirected to the homepage in 3 seconds.</p>
-      </body>
-    </html>
-  `);
+  if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
   res.sendFile(path.join(__dirname, 'profile', 'index.html'));
 });
-
+// endpoint to get the users display name
 app.get('/api/user', (req, res) => {
     if (!req.isAuthenticated()) return res.status(401).json({
         error: 'Not authenticated',
@@ -196,12 +191,16 @@ app.get('/get-trivia', async (req, res) => {
   }
 });
 
+// check to see if data from trivia is correct before saving to database
 app.post('/save-trivia-result', (req, res) => {
   const user_id = req.user ? req.user.id : null;
-  const { question, correct_answer, user_answer, is_correct } = req.body;
-    db.query(
-    'INSERT INTO trivia_results (user_id, question, user_answer, correct_answer) VALUES (?, ?, ?, ?)',
-    [user_id, question, user_answer, correct_answer],
+  const { question_difficulty, question_category, question, correct_answer } = req.body;
+  if (!question_difficulty || !question_category || !question || !correct_answer) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+  db.query(
+    'INSERT INTO trivia_results (user_id, question_difficulty, question_category, question, correct_answer ) VALUES (?, ?, ?, ?, ?)',
+    [user_id, question_difficulty, question_category, question, correct_answer],
     (err, result) => {
       if (err) return res.status(500).json({ error: err.message });
       res.json({ success: true, id: result.insertId });
@@ -213,7 +212,7 @@ app.get('/api/my-trivia-results', (req, res) => {
   const user_id = req.user ? req.user.id : null;
   if (!user_id) return res.json([]);
   db.query(
-    'SELECT question, user_answer, correct_answer, is_correct, created_at FROM trivia_results WHERE user_id = ? ORDER BY created_at DESC',
+    'SELECT question_difficulty, question_category, question, correct_answer, created_at FROM trivia_results WHERE user_id = ? ORDER BY created_at DESC',
     [user_id],
     (err, results) => {
       if (err) return res.status(500).json({ error: err.message });
@@ -244,9 +243,12 @@ app.post('/logout', (req, res) => {
 // RESTful CRUD endpoints for trivia questions
 // CREATE (Add a new trivia question)
 app.post('/api/trivia-questions-database', (req, res) => {
-  const { question, correct_answer } = req.body;
+    const { question_category, question, correct_answer } = req.body;
+    if (!req.isAuthenticated() & !req.user) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
   db.query(
-    'INSERT INTO trivia_results (question, correct_answer) VALUES (?, ?)',    [question, correct_answer],
+    'INSERT INTO trivia_results (question_category, question, correct_answer) VALUES (?, ?)',    [question, correct_answer],
     (err, result) => {
       if (err) return res.status(500).json({ error: err.message });
       res.json({ success: true, id: result.insertId });
