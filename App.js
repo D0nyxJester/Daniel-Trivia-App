@@ -150,19 +150,34 @@ app.get('/auth/google/callback', (req, res, next) => {
 });
 
 app.get('/profile', (req, res) => {
-  if (!req.isAuthenticated()) return res.redirect('/');
+  if (!req.isAuthenticated()) return res.send(`
+    <html>
+      <head>
+        <meta http-equiv="refresh" content="3;url=/" />
+      </head>
+      <body>
+        <h2>Error: You must be logged in to view this page.</h2>
+        <p>You will be redirected to the homepage in 3 seconds.</p>
+      </body>
+    </html>
+  `);
   res.sendFile(path.join(__dirname, 'profile', 'index.html'));
 });
 
 app.get('/api/user', (req, res) => {
-  if (!req.isAuthenticated()) return res.json({ displayName: 'Guest' });
-  res.json({ displayName: req.user.displayName });
+    if (!req.isAuthenticated()) return res.status(401).json({
+        error: 'Not authenticated',
+        code: 401,
+        message: 'User is not logged in',
+        help: 'Please log in via Google or GitHub'
+    });
+    res.json({ displayName: req.user.displayName });
 });
 
 app.get('/get-trivia', async (req, res) => {
-  const amount = req.query.amount || 10;
+  const questionAmount = req.query.amount || 10;
   const params = [];
-  params.push(`amount=${amount}`);
+  params.push(`amount=${questionAmount}`);
   if (req.query.category && req.query.category !== 'any') {
     params.push(`category=${req.query.category}`);
   }
@@ -174,7 +189,6 @@ app.get('/get-trivia', async (req, res) => {
   }
   const url = `https://opentdb.com/api.php?${params.join('&')}`;
   try {
-    console.log('Trivia API URL:', url);
     const response = await axios.get(url);
       res.json(response.data);
   } catch (error) {
@@ -225,6 +239,56 @@ app.post('/logout', (req, res) => {
       });
     });
   }
+});
+
+// RESTful CRUD endpoints for trivia questions
+// CREATE (Add a new trivia question)
+app.post('/api/trivia-questions-database', (req, res) => {
+  const { question, correct_answer } = req.body;
+  db.query(
+    'INSERT INTO trivia_results (question, correct_answer) VALUES (?, ?)',    [question, correct_answer],
+    (err, result) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ success: true, id: result.insertId });
+    }
+  );
+});
+
+// READ (Get all trivia questions)
+app.get('/api/trivia-questions-database', (req, res) => {
+  db.query('SELECT id, question, correct_answer FROM trivia_results', (err, results) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(results);
+  });
+});
+
+// READ (Get one trivia question by ID)
+app.get('/api/trivia-questions-database/:id', (req, res) => {
+  db.query('SELECT id, question, correct_answer FROM trivia_results WHERE id = ?', [req.params.id], (err, results) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(results[0]);
+  });
+});
+
+// UPDATE (Change a trivia question)
+app.put('/api/trivia-questions-database/:id', (req, res) => {
+  const { question, correct_answer } = req.body;
+  db.query(
+    'UPDATE trivia_results SET question = ?, correct_answer = ? WHERE id = ?',
+    [question, correct_answer, req.params.id],
+    (err, result) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ success: true });
+    }
+  );
+});
+
+// DELETE (Remove a trivia question)
+app.delete('/api/trivia-questions/:id', (req, res) => {
+  db.query('DELETE FROM trivia_results WHERE id = ?', [req.params.id], (err, result) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ success: true });
+  });
 });
 
 app.listen(3000, () => console.log('Server started on http://localhost:3000'));
