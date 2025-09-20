@@ -1,63 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Social Media Login</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f5f6fa;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-    }
-    .login-container {
-      background: #fff;
-      padding: 2rem 2.5rem;
-      border-radius: 12px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-      text-align: center;
-    }
-    .login-btn {
-      display: block;
-      width: 100%;
-      margin: 1rem 0;
-      padding: 0.75rem;
-      font-size: 1.1rem;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .google {
-      background: #4285F4;
-      color: #fff;
-    }
-    .google:hover {
-      background: #357ae8;
-    }
-    .github {
-      background: #333;
-      color: #fff;
-    }
-    .github:hover {
-      background: #24292e;
-    }
-    .login-title {
-      font-size: 1.5rem;
-      margin-bottom: 1.5rem;
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Daniel App</title>
 </head>
+
 <body>
-  <div class="login-container">
-    <div class="login-title">Sign in to website</div>
-    <a href="/auth/google"><button class="login-btn google">Login with Google</button></a>
-    <a href="/auth/github"><button class="login-btn github">Login with GitHub</button></a>
-    <a href="/auth/createprofile"><button class="login-btn newprofile">Create New Profile</button></a>
-  </div>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
 </body>
+
 </html>

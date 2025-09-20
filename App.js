@@ -7,18 +7,18 @@ const GitHubStrategy = require('passport-github2').Strategy;
 const session = require('express-session');
 const mysql = require('mysql2');
 const axios = require('axios');
-const bcrypt = require('bcrypt');
-
+const swaggerUi = require('swagger-ui-express');
+const swaggerJsdoc = require('swagger-jsdoc');
+const rateLimit = require('express-rate-limit');
+const apicache = require('apicache');
+let cache = apicache.middleware;
 
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  port: process.env.DB_PORT,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
+  port: process.env.DB_PORT
 });
 
 db.connect((err) => {
@@ -37,27 +37,25 @@ db.connect((err) => {
     provider VARCHAR(50)
   )`);
     // Create trivia_results table if it doesn't exist
-  db.query(`CREATE TABLE IF NOT EXISTS trivia_results (
+db.query(`CREATE TABLE IF NOT EXISTS trivia_results (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id VARCHAR(255),
   question_difficulty VARCHAR(40),
   question_category VARCHAR(100),
   question TEXT,
   correct_answer VARCHAR(255),
+  user_answer VARCHAR(255),
+  is_correct BOOLEAN,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )`);
 });
 
-const app = express();
 
+const app = express();
+app.use(express.json());
 app.use(session({ secret: process.env.SESSION_SECRET, resave: false, saveUninitialized: true }));
 app.use(passport.initialize());
 app.use(passport.session());
-app.use(express.json());
-
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
 
 // GitHub Strategy
 passport.use(new GitHubStrategy({
@@ -69,6 +67,7 @@ passport.use(new GitHubStrategy({
 
     const user = {
       id: profile.id,
+      user_type: 'user',
       displayName: profile.displayName || profile.username,
       email: profile.emails && profile.emails[0] ? profile.emails[0].value : null,
       provider: profile.provider || 'github'
@@ -85,6 +84,7 @@ app.get('/auth/github',
   passport.authenticate('github', { scope: [ 'user:email' ] })
 );
 
+// GitHub callback
 app.get('/auth/github/callback', (req, res, next) => {
   passport.authenticate('github', (err, user, info) => {
     if (err) {
@@ -93,14 +93,14 @@ app.get('/auth/github/callback', (req, res, next) => {
     }
     if (!user) {
       console.warn('GitHub login failed:', info);
-      return res.redirect('/?error=login_failed');
+      return res.redirect('http://localhost:3001/?error=login_failed'); // Changed to React app
     }
     req.logIn(user, (err) => {
       if (err) {
         console.error('GitHub login session error:', err);
         return res.status(500).send('Session error. Please try again.');
       }
-      return res.redirect('/profile');
+      return res.redirect('http://localhost:3001'); // Changed to React app
     });
   })(req, res, next);
 });
@@ -114,6 +114,7 @@ passport.use(new GoogleStrategy({
 function(accessToken, refreshToken, profile, done) {
   const user = {
     id: profile.id,
+    user_type: 'user',
     displayName: profile.displayName,
     email: profile.emails && profile.emails[0] ? profile.emails[0].value : null,
     provider: profile.provider || 'google'
@@ -132,6 +133,7 @@ app.get('/auth/google',
   passport.authenticate('google', { scope: ['profile', 'email'] })
 );
 
+// Google callback
 app.get('/auth/google/callback', (req, res, next) => {
   passport.authenticate('google', (err, user, info) => {
     if (err) {
@@ -140,37 +142,52 @@ app.get('/auth/google/callback', (req, res, next) => {
     }
     if (!user) {
       console.warn('Google login failed:', info);
-      return res.redirect('/?error=login_failed');
+      return res.redirect('http://localhost:3001/?error=login_failed'); // Changed to React app
     }
     req.logIn(user, (err) => {
       if (err) {
         console.error('Google login session error:', err);
         return res.status(500).send('Session error. Please try again.');
       }
-      return res.redirect('/profile');
+      return res.redirect('http://localhost:3001'); // Changed to React app
     });
   })(req, res, next);
 });
 
-app.get('/profile', (req, res) => {
-  if (!req.isAuthenticated()) {
-      return res.status(401).json({ error: 'Unauthorized' });
+// Middleware to ensure user is authenticated
+function ensureAuthenticated(req, res, next) {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  res.status(401).json({ error: 'Unauthorized' });
+}
+// Middleware to check for specific user roles
+function requireRole(...roles) {
+  return function(req, res, next) {
+    if (req.isAuthenticated() && roles.includes(req.user.user_type)) {
+      return next();
     }
-  res.sendFile(path.join(__dirname, 'profile', 'index.html'));
-});
-// endpoint to get the users display name
-app.get('/api/user', (req, res) => {
-    if (!req.isAuthenticated()) return res.status(401).json({
-        error: 'Not authenticated',
-        code: 401,
-        message: 'User is not logged in',
-        help: 'Please log in via Google or GitHub'
-    });
-    res.json({ displayName: req.user.displayName });
-});
+    res.status(403).json({ error: 'Forbidden' });
+  };
+}
+
+const swaggerOptions = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'Trivia API',
+      version: '1.0.0',
+      description: 'API documentation for Trivia App',
+    },
+  },
+  apis: ['./App.js'], // Path to your API routes
+};
+
+const swaggerSpec = swaggerJsdoc(swaggerOptions);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec)); 
 
 app.get('/get-trivia', async (req, res) => {
-  const questionAmount = req.query.amount || 10;
+  const questionAmount = 1; // Always fetch 1 question at a time
   const params = [];
   params.push(`amount=${questionAmount}`);
   if (req.query.category && req.query.category !== 'any') {
@@ -191,16 +208,14 @@ app.get('/get-trivia', async (req, res) => {
   }
 });
 
-// check to see if data from trivia is correct before saving to database
-app.post('/save-trivia-result', (req, res) => {
+// Endpoint to save trivia result from frontend
+app.post('/save-trivia-result', ensureAuthenticated, (req, res) => {
   const user_id = req.user ? req.user.id : null;
-  const { question_difficulty, question_category, question, correct_answer } = req.body;
-  if (!question_difficulty || !question_category || !question || !correct_answer) {
-    return res.status(400).json({ error: 'Missing required fields' });
-  }
+  const { question_difficulty, question_category, question, correct_answer, user_answer, is_correct } = req.body;
+    if (!user_id) return res.status(401).json({ error: 'Not authenticated' });
   db.query(
-    'INSERT INTO trivia_results (user_id, question_difficulty, question_category, question, correct_answer ) VALUES (?, ?, ?, ?, ?)',
-    [user_id, question_difficulty, question_category, question, correct_answer],
+    'INSERT INTO trivia_results (user_id, question_difficulty, question_category, question, correct_answer, user_answer, is_correct) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    [user_id, question_difficulty, question_category, question, correct_answer, user_answer, is_correct],
     (err, result) => {
       if (err) return res.status(500).json({ error: err.message });
       res.json({ success: true, id: result.insertId });
@@ -208,11 +223,46 @@ app.post('/save-trivia-result', (req, res) => {
   );
 });
 
-app.get('/api/my-trivia-results', (req, res) => {
+app.post('/save-trivia-answer', ensureAuthenticated, (req, res) => {
+  const user_id = req.user ? req.user.id : null;
+  const { question_difficulty, question_category, question, correct_answer, user_answer, is_correct } = req.body;
+  
+  if (!user_id) return res.status(401).json({ error: 'Not authenticated' });
+  
+  db.query(
+    'INSERT INTO trivia_results (user_id, question_difficulty, question_category, question, correct_answer, user_answer, is_correct) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    [user_id, question_difficulty, question_category, question, correct_answer, user_answer, is_correct],
+    (err, result) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ success: true, id: result.insertId });
+    }
+  );
+});
+
+// Limit to 100 requests per 15 minutes per IP
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: { error: 'Too many requests, please try again later.' }
+});
+// Apply to all API routes
+app.use('/api/', apiLimiter);
+
+app.get('/api/user', (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({
+        error: 'Not authenticated',
+        code: 401,
+        message: 'User is not logged in',
+        help: 'Please log in via Google or GitHub'
+    });
+    res.json({ displayName: req.user.displayName });
+});
+
+app.get('/api/my-trivia-results', ensureAuthenticated, (req, res) => {
   const user_id = req.user ? req.user.id : null;
   if (!user_id) return res.json([]);
   db.query(
-    'SELECT question_difficulty, question_category, question, correct_answer, created_at FROM trivia_results WHERE user_id = ? ORDER BY created_at DESC',
+    'SELECT id, question_difficulty, question_category, question, correct_answer, user_answer, is_correct, created_at FROM trivia_results WHERE user_id = ? ORDER BY created_at DESC',
     [user_id],
     (err, results) => {
       if (err) return res.status(500).json({ error: err.message });
@@ -220,35 +270,63 @@ app.get('/api/my-trivia-results', (req, res) => {
     }
   );
 });
-
-app.post('/logout', (req, res) => {
-  if (req.user && req.user.id) {
-    db.query('DELETE FROM users WHERE id = ?', [req.user.id], (err) => {
-      if (err) console.error('Error deleting user:', err);
-      req.logout(() => {
-        req.session.destroy(() => {
-          res.redirect('/');
-        });
-      });
-    });
-  } else {
-    req.logout(() => {
-      req.session.destroy(() => {
-        res.redirect('/');
-      });
-    });
-  }
+app.delete('/api/my-trivia-results/:id', ensureAuthenticated, (req, res) => {
+  const user_id = req.user ? req.user.id : null;
+  const result_id = req.params.id;
+  
+  if (!user_id) return res.status(401).json({ error: 'Not authenticated' });
+  
+  // Only allow users to delete their own results
+  db.query(
+    'DELETE FROM trivia_results WHERE id = ? AND user_id = ?',
+    [result_id, user_id],
+    (err, result) => {
+      if (err) return res.status(500).json({ error: err.message });
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ error: 'Result not found or not authorized' });
+      }
+      res.json({ success: true, message: 'Result deleted successfully' });
+    }
+  );
 });
 
 // RESTful CRUD endpoints for trivia questions
+/**
+ * @swagger
+ * /api/trivia-questions-database:
+ *   post:
+ *     summary: Add a new trivia question
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               question_category:
+ *                 type: string
+ *               question:
+ *                 type: string
+ *               correct_answer:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ */
+
 // CREATE (Add a new trivia question)
-app.post('/api/trivia-questions-database', (req, res) => {
-    const { question_category, question, correct_answer } = req.body;
-    if (!req.isAuthenticated() & !req.user) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
+app.post('/api/trivia-questions-database', ensureAuthenticated, requireRole('admin', 'user'), (req, res) => {
+  const { question_category, question, correct_answer } = req.body;
+  const user_id = req.user ? req.user.id : null;
   db.query(
-    'INSERT INTO trivia_results (question_category, question, correct_answer) VALUES (?, ?)',    [question, correct_answer],
+    'INSERT INTO trivia_results (user_id, question_category, question, correct_answer) VALUES (?, ?, ?, ?)',
+    [user_id, question_category, question, correct_answer],
     (err, result) => {
       if (err) return res.status(500).json({ error: err.message });
       res.json({ success: true, id: result.insertId });
@@ -257,27 +335,123 @@ app.post('/api/trivia-questions-database', (req, res) => {
 });
 
 // READ (Get all trivia questions)
-app.get('/api/trivia-questions-database', (req, res) => {
-  db.query('SELECT id, question, correct_answer FROM trivia_results', (err, results) => {
+/**
+ * @swagger
+ * /api/trivia-questions-database:
+ *   get:
+ *     summary: Get all trivia questions
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                   question_category:
+ *                     type: string
+ *                   question:
+ *                     type: string
+ *                   correct_answer:
+ *                     type: string
+ *       401:
+ *         description: Unauthorized
+ */
+app.get('/api/trivia-questions-database', cache('5 minutes'), ensureAuthenticated, (req, res) => {
+  db.query('SELECT id, question_category, question, correct_answer FROM trivia_results', (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(results);
   });
 });
 
 // READ (Get one trivia question by ID)
-app.get('/api/trivia-questions-database/:id', (req, res) => {
-  db.query('SELECT id, question, correct_answer FROM trivia_results WHERE id = ?', [req.params.id], (err, results) => {
+/**
+ * @swagger
+ * /api/trivia-questions-database/{id}:
+ *   get:
+ *     summary: Get a trivia question by ID
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                 question_category:
+ *                   type: string
+ *                 question:
+ *                   type: string
+ *                 correct_answer:
+ *                   type: string
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ */
+app.get('/api/trivia-questions-database/:id', ensureAuthenticated, (req, res) => {
+  db.query('SELECT id, question_category, question, correct_answer FROM trivia_results WHERE id = ?', [req.params.id], (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(results[0]);
   });
 });
 
 // UPDATE (Change a trivia question)
-app.put('/api/trivia-questions-database/:id', (req, res) => {
-  const { question, correct_answer } = req.body;
+/**
+ * @swagger
+ * /api/trivia-questions-database/{id}:
+ *   put:
+ *     summary: Update a trivia question
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               question_category:
+ *                 type: string
+ *               question:
+ *                 type: string
+ *               correct_answer:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ */
+app.put('/api/trivia-questions-database/:id', ensureAuthenticated, (req, res) => {
+  const { question_category, question, correct_answer } = req.body;
   db.query(
-    'UPDATE trivia_results SET question = ?, correct_answer = ? WHERE id = ?',
-    [question, correct_answer, req.params.id],
+    'UPDATE trivia_results SET question_category = ?, question = ?, correct_answer = ? WHERE id = ?',
+    [question_category, question, correct_answer, req.params.id],
     (err, result) => {
       if (err) return res.status(500).json({ error: err.message });
       res.json({ success: true });
@@ -286,11 +460,52 @@ app.put('/api/trivia-questions-database/:id', (req, res) => {
 });
 
 // DELETE (Remove a trivia question)
-app.delete('/api/trivia-questions/:id', (req, res) => {
+/**
+ * @swagger
+ * /api/trivia-questions/{id}:
+ *   delete:
+ *     summary: Delete a trivia question
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Success
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ */
+app.delete('/api/trivia-questions-database/:id', ensureAuthenticated, requireRole('admin'), (req, res) => {
   db.query('DELETE FROM trivia_results WHERE id = ?', [req.params.id], (err, result) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ success: true });
   });
 });
 
-app.listen(3000, () => console.log('Server started on http://localhost:3000'));
+
+
+
+app.get('/logout', (req, res) => {
+  req.logout((err) => {
+    if (err) {
+      return next(err);
+    }
+    req.session.destroy((err) => {
+      if (err) {
+        console.error('Session destruction error:', err);
+      }
+      res.redirect('http://localhost:3001'); // Redirect to React app
+    });
+  });
+});
+
+const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });

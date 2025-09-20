@@ -5,7 +5,10 @@
   "main": "index.js",
   "scripts": {
     "start": "node App.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "repository": {
     "type": "git",
@@ -18,17 +21,23 @@
   },
   "homepage": "https://github.com/D0nyxJester/Daniel-Social-Media-Login-Page#readme",
   "dependencies": {
-    "axios": "^1.12.1",
-    "bcrypt": "^6.0.0",
+    "apicache": "^1.6.3",
+    "axios": "^1.12.2",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
+    "express-rate-limit": "^8.1.0",
     "express-session": "^1.18.2",
-    "mongoose": "^8.18.1",
     "mysql2": "^3.14.4",
     "passport": "^0.7.0",
     "passport-github2": "^0.1.12",
     "passport-google-oauth20": "^2.0.0",
-    "passport-linkedin-oauth2": "^2.0.0",
-    "passport-local": "^1.0.0"
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^5.0.3",
+    "vite": "^7.1.6"
   }
 }

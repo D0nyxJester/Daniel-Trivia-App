@@ -1,0 +1,127 @@
+Users\danie\danielapp\src\index.css body {
+    font-family: Arial, sans-serif;
+    background: #f4f6fa;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 600px;
+    margin: 40px auto;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    padding: 32px 24px 24px 24px;
+}
+
+h1 {
+    color: #2c3e50;
+    font-size: 1.5em;
+    margin-bottom: 18px;
+}
+
+.trivia-title {
+    color: #8e44ad;
+    font-size: 2em;
+    text-align: center;
+    margin-bottom: 24px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+form {
+    margin-bottom: 18px;
+}
+
+label {
+    display: block;
+    margin: 12px 0 4px 0;
+    color: #34495e;
+}
+
+input,
+select {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+button {
+    background: #3498db;
+    color: #fff;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1em;
+    margin-top: 8px;
+}
+
+button:hover {
+    background: #2980b9;
+}
+
+pre#result {
+    background: #f8f8f8;
+    border-radius: 4px;
+    padding: 12px;
+    font-size: 0.95em;
+    color: #333;
+    max-height: 300px;
+    overflow: auto;
+}
+
+table {
+    width: 100%;
+    margin-top: 16px;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+th {
+    background-color: #f2f2f2;
+}
+
+.compact-table {
+    width: 100%;
+    font-size: 1em;
+}
+
+.compact-table th,
+.compact-table td {
+    padding: 12px 14px;
+    border-bottom: 1px solid #e0e0e0;
+    text-align: left;
+    word-break: break-word;
+    white-space: normal;
+}
+
+.compact-table th {
+    background-color: #f7f7f7;
+    font-weight: 600;
+}
+
+.compact-table td {
+    vertical-align: top;
+    white-space: normal;
+    word-wrap: break-word;
+    max-width: 400px;
+}
+
+.results-container {
+    max-width: 1400px;
+    margin: 40px auto;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    padding: 32px 24px 24px 24px;
+}
