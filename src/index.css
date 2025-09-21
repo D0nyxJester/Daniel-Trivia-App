@@ -1,10 +1,3 @@
-Users\danie\danielapp\src\index.css body {
-    font-family: Arial, sans-serif;
-    background: #f4f6fa;
-    margin: 0;
-    padding: 0;
-}
-
 .container {
     max-width: 600px;
     margin: 40px auto;
@@ -99,14 +92,13 @@ th {
 .compact-table th,
 .compact-table td {
     padding: 12px 14px;
-    border-bottom: 1px solid #e0e0e0;
     text-align: left;
     word-break: break-word;
     white-space: normal;
 }
 
 .compact-table th {
-    background-color: #f7f7f7;
+    background-color: #ececec;
     font-weight: 600;
 }
 
@@ -117,11 +109,164 @@ th {
     max-width: 400px;
 }
 
+/* Mobile-friendly table wrapper */
+.table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 1rem 0;
+}
+
+.compact-table {
+    min-width: 800px;
+    /* Minimum width to prevent cramping */
+    font-size: 0.875rem;
+    /* Smaller font on mobile */
+}
+
+@media (max-width: 768px) {
+
+    .compact-table th,
+    .compact-table td {
+        padding: 8px 4px;
+        font-size: 0.75rem;
+    }
+
+    .compact-table th:nth-child(3),
+    .compact-table td:nth-child(3) {
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+/* Navbar styles */
+.navbar {
+    width: 100%;
+    background: #d132df;
+    padding: 15px 20px;
+    color: #279bb8;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    /* Add this for absolute positioning */
+}
+
+.navbar ul {
+    position: absolute;
+    /* Position absolutely */
+    left: 50%;
+    /* Move to center */
+    transform: translateX(-50%);
+    /* Center perfectly */
+    padding: 10px 30px;
+    border-radius: 30px;
+    box-shadow: 0 2px 8px rgba(4, 137, 185, 0.783);
+    margin: 0;
+    /* Remove default margin */
+    list-style: none;
+    /* Remove bullet points */
+}
+
+.navbar ul li {
+    display: inline-block;
+    margin-right: 20px;
+    padding: 0px 10px;
+}
+
+.navbar ul li:last-child {
+    margin-right: 0;
+    /* Remove margin from last item */
+}
+
+.navbar ul li a {
+    color: #000000;
+    text-decoration: none;
+    /* Remove underlines */
+    font-weight: 500;
+}
+
+.navbar ul li a:hover {
+    color: #ffffff;
+    /* Add hover effect */
+}
+
+.navbar a button {
+    background: #279bb8;
+    color: #fff;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1em;
+    margin-left: auto;
+    margin-right: 20px;
+}
+
+.navbar a button:hover {
+    background: #1e7a8c;
+}
+
+/* Make sure the link doesn't add extra styling */
+.navbar a {
+    text-decoration: none;
+    margin-left: auto;
+    margin-right: 20px;
+}
+
+/* Dropdown menu */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown .dropbtn {
+    background: #279bb8;
+    color: white;
+    padding: 10px 15px;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.navbar .dropdown:hover .dropbtn,
+.dropbtn:focus {
+    background: #1e7a8c;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.dropdown-content a {
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+
+.dropdown-content a:hover {
+    background-color: #f1f1f1;
+}
+
+.dropdown-content.show {
+    display: block;
+}
+
 .results-container {
     max-width: 1400px;
     margin: 40px auto;
-    background: #fff;
+    background: #ffffff;
     border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 2px 8px rgba(121, 75, 75, 0.08);
     padding: 32px 24px 24px 24px;
 }
