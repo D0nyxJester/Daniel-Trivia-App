@@ -30,15 +30,7 @@ function Signin() {
 
   return (
     <div className="container">
-      <div style={{ 
-        maxWidth: '400px', 
-        margin: '50px auto', 
-        textAlign: 'center',
-        padding: '40px',
-        backgroundColor: '#f8f9fa',
-        borderRadius: '10px',
-        boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-      }}>
+      <div>
         <h1 style={{ marginBottom: '30px', color: '#2c3e50' }}>
           Sign In to Daniel App
         </h1>

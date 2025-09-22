@@ -35,6 +35,18 @@ function App() {
 
   return (
     <>
+      {/* background image */}
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: -1,
+        backgroundImage: `url(/puzzle-pieces-wooden-table.jpg)`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+      }} />
       <Navbar isLoggedIn={isLoggedIn} user={user} onLogout={handleLogout} />
       <Routes>
         <Route path="/" element={<Home />} />

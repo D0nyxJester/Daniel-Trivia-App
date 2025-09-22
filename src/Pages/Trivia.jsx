@@ -164,12 +164,9 @@ function Trivia() {
     }
   };
 
-  const handleNextQuestion = () => {
-    setCurrentQuestion(null)
-    setShowResult(false)
-    setUserAnswer('')
-    setAnswerOptions([])
-  }
+const handleNextQuestion = () => {
+  handleSubmit({ preventDefault: () => {} }) 
+}
 
   return (
     <div>
@@ -266,19 +263,7 @@ function Trivia() {
                   <button
                     key={index}
                     onClick={() => handleAnswerSubmit(option)}
-                    style={{
-                      display: 'block',
-                      width: '100%',
-                      padding: '12px',
-                      margin: '8px 0',
-                      backgroundColor: '#fff',
-                      border: '2px solid #ddd',
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      fontSize: '16px',
-                      textAlign: 'left',
-                      color: '#333'
-                    }}
+                    className='trivia-option-btn'
                     onMouseOver={(e) => {
                       e.target.style.backgroundColor = '#e9ecef'
                       e.target.style.color = '#000'
@@ -309,15 +294,7 @@ function Trivia() {
                 
                 <button
                   onClick={handleNextQuestion}
-                  style={{
-                    backgroundColor: '#28a745',
-                    color: 'white',
-                    padding: '10px 20px',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '16px'
-                  }}
+                  className='trivia-next-btn'
                 >
                   Get Another Question
                 </button>
@@ -363,20 +340,11 @@ function Trivia() {
                       <td>
                         <button
                           onClick={() => deleteResult(r.id)}
-                          style={{
-                            backgroundColor: '#dc3545',
-                            color: 'white',
-                            border: 'none',
-                            padding: '4px 8px',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            fontSize: '12px'
-                          }}
-                          onMouseOver={(e) => e.target.style.backgroundColor = '#c82333'}
-                          onMouseOut={(e) => e.target.style.backgroundColor = '#dc3545'}
+                          className="delete-button"
                         >
                           Delete
                         </button>
+                        
                       </td>
                     </tr>
                   ))}

@@ -33,7 +33,7 @@ function Home() {
         </div>
       ) : (
         <div>
-          <h1>Welcome to Daniel App</h1>
+          <h1>Welcome to Daniel's App</h1>
           <p>This is a trivia application where you can test your knowledge!</p>
         <p>Please sign in to access trivia features and save your results.</p>
         </div>

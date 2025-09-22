@@ -23,13 +23,13 @@ const Navbar = ({ isLoggedIn, user, onLogout }) => {
       </div>
       
       {isLoggedIn ? (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginLeft: 'auto', marginRight: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginLeft: 'auto', marginRight: '40px' }}>
           <span style={{ color: 'white' }}>{user?.displayName}</span>
-          <button onClick={onLogout}>Logout</button>
+          <button onClick={onLogout} className="navbar-btn">Logout</button>
         </div>
       ) : (
         <Link to="/signin">
-          <button>Login</button>
+          <button className="navbar-btn">Login</button>
         </Link>
       )}
     </div>

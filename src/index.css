@@ -1,20 +1,28 @@
+html,
+body,
+#root {
+    width: 100vw;
+    max-width: 100vw;
+    overflow-x: hidden;
+}
+
 .container {
     max-width: 600px;
     margin: 40px auto;
-    background: #fff;
+    background: #986314;
     border-radius: 10px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     padding: 32px 24px 24px 24px;
 }
 
 h1 {
-    color: #2c3e50;
+    color: #ffffff;
     font-size: 1.5em;
     margin-bottom: 18px;
 }
 
 .trivia-title {
-    color: #8e44ad;
+    color: #000000;
     font-size: 2em;
     text-align: center;
     margin-bottom: 24px;
@@ -43,8 +51,8 @@ select {
 }
 
 button {
-    background: #3498db;
-    color: #fff;
+    background: #fefefe;
+    color: #000000;
     border: none;
     padding: 10px 18px;
     border-radius: 4px;
@@ -54,7 +62,7 @@ button {
 }
 
 button:hover {
-    background: #2980b9;
+    background: #a4a4a4;
 }
 
 pre#result {
@@ -98,7 +106,7 @@ th {
 }
 
 .compact-table th {
-    background-color: #ececec;
+    background-color: #c09b60;
     font-weight: 600;
 }
 
@@ -123,6 +131,59 @@ th {
     /* Smaller font on mobile */
 }
 
+/* Trivia answer buttons */
+.trivia-answer-btn {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    background-color: #fff;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    text-align: left;
+    color: #333;
+    transition: background 0.2s, color 0.2s;
+}
+
+.trivia-answer-btn:hover {
+    background-color: #e9ecef;
+    color: #000;
+}
+
+/* Next question button */
+.trivia-next-btn {
+    background-color: #a06308ff;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 10px;
+    transition: background 0.2s;
+}
+
+.trivia-next-btn:hover {
+    background-color: #7a4d06;
+}
+
+/* Delete button */
+.delete-button {
+    background: #ff4d4d;
+    color: #ffffff;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.delete-button:hover {
+    background: #ff1a1a;
+}
+
 @media (max-width: 768px) {
 
     .compact-table th,
@@ -143,7 +204,7 @@ th {
 /* Navbar styles */
 .navbar {
     width: 100%;
-    background: #d132df;
+    background: #895c04;
     padding: 15px 20px;
     color: #279bb8;
     display: flex;
@@ -153,48 +214,9 @@ th {
     /* Add this for absolute positioning */
 }
 
-.navbar ul {
-    position: absolute;
-    /* Position absolutely */
-    left: 50%;
-    /* Move to center */
-    transform: translateX(-50%);
-    /* Center perfectly */
-    padding: 10px 30px;
-    border-radius: 30px;
-    box-shadow: 0 2px 8px rgba(4, 137, 185, 0.783);
-    margin: 0;
-    /* Remove default margin */
-    list-style: none;
-    /* Remove bullet points */
-}
-
-.navbar ul li {
-    display: inline-block;
-    margin-right: 20px;
-    padding: 0px 10px;
-}
-
-.navbar ul li:last-child {
-    margin-right: 0;
-    /* Remove margin from last item */
-}
-
-.navbar ul li a {
-    color: #000000;
-    text-decoration: none;
-    /* Remove underlines */
-    font-weight: 500;
-}
-
-.navbar ul li a:hover {
-    color: #ffffff;
-    /* Add hover effect */
-}
-
 .navbar a button {
-    background: #279bb8;
-    color: #fff;
+    background: #ffffff;
+    color: #000000;
     border: none;
     padding: 10px 18px;
     border-radius: 4px;
@@ -205,7 +227,7 @@ th {
 }
 
 .navbar a button:hover {
-    background: #1e7a8c;
+    background: #a0a0a0;
 }
 
 /* Make sure the link doesn't add extra styling */
@@ -215,6 +237,25 @@ th {
     margin-right: 20px;
 }
 
+.navbar-btn {
+    background: #ffffff;
+    color: #000000;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1em;
+    margin-left: auto;
+    margin-right: 20px;
+}
+
+.navbar-btn:hover {
+    background: #9d9d9d;
+}
+
+/* signin/signup styles */
+
+
 /* Dropdown menu */
 .dropdown {
     position: relative;
@@ -222,8 +263,8 @@ th {
 }
 
 .dropdown .dropbtn {
-    background: #279bb8;
-    color: white;
+    background: #ffffff;
+    color: rgb(0, 0, 0);
     padding: 10px 15px;
     font-size: 16px;
     border: none;
@@ -233,13 +274,13 @@ th {
 
 .navbar .dropdown:hover .dropbtn,
 .dropbtn:focus {
-    background: #1e7a8c;
+    background: #a1a1a1;
 }
 
 .dropdown-content {
     display: none;
     position: absolute;
-    background-color: #f9f9f9;
+    background-color: #ffffff;
     min-width: 160px;
     box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
     z-index: 1;
@@ -255,7 +296,7 @@ th {
 }
 
 .dropdown-content a:hover {
-    background-color: #f1f1f1;
+    background-color: #a7a7a7;
 }
 
 .dropdown-content.show {
@@ -265,7 +306,7 @@ th {
 .results-container {
     max-width: 1400px;
     margin: 40px auto;
-    background: #ffffff;
+    background: #9c6f04;
     border-radius: 10px;
     box-shadow: 0 2px 8px rgba(121, 75, 75, 0.08);
     padding: 32px 24px 24px 24px;

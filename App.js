@@ -488,9 +488,6 @@ app.delete('/api/trivia-questions-database/:id', ensureAuthenticated, requireRol
   });
 });
 
-
-
-
 app.get('/logout', (req, res) => {
   req.logout((err) => {
     if (err) {
