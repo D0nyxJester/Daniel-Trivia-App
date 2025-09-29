@@ -100,6 +100,34 @@ describe('Trivia Page', () => {
     ).toBeInTheDocument();
   });
 
+    it('handles fetch error gracefully', async () => {
+  (global.fetch as jest.Mock).mockImplementationOnce(() => Promise.reject('API is down'));
+  render(<Trivia />);
+  fireEvent.click(screen.getByRole('button', { name: /get trivia question/i }));
+  await waitFor(() => {
+    expect(screen.queryByText('What is 2+2?')).not.toBeInTheDocument();
+    // Optionally check for error message if your UI shows one
+  });
+});
+
+it('handles empty trivia results', async () => {
+  (global.fetch as jest.Mock).mockImplementationOnce(() =>
+    Promise.resolve({ json: () => Promise.resolve({ results: [] }) })
+  );
+  render(<Trivia />);
+  fireEvent.click(screen.getByRole('button', { name: /get trivia question/i }));
+  await waitFor(() => {
+    // Optionally check for "No questions found" message if your UI shows one
+  });
+});
+
+it('handles form input changes', async () => {
+  render(<Trivia />);
+  const categorySelect = screen.getByLabelText(/category/i);
+  fireEvent.change(categorySelect, { target: { value: '10' } });
+  expect((categorySelect as HTMLSelectElement).value).toBe('10');
+  // Repeat for difficulty/type if present
+});
   it('shows "Get Another Question" button after answering', async () => {
     render(<Trivia />);
     fireEvent.click(screen.getByRole('button', { name: /get trivia question/i }));

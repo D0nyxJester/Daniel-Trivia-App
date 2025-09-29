@@ -56,6 +56,7 @@ app.use(express.json());
 app.use(session({ secret: process.env.SESSION_SECRET, resave: false, saveUninitialized: true }));
 app.use(passport.initialize());
 app.use(passport.session());
+module.exports = app;
 
 // GitHub Strategy
 passport.use(new GitHubStrategy({
@@ -501,8 +502,3 @@ app.get('/logout', (req, res) => {
     });
   });
 });
-
-const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
