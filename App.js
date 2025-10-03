@@ -3,7 +3,7 @@ const path = require('path');
 require('dotenv').config();
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
-const GitHubStrategy = require('passport-github2').Strategy;  
+const GitHubStrategy = require('passport-github2').Strategy;
 const session = require('express-session');
 const mysql = require('mysql2');
 const axios = require('axios');
@@ -26,8 +26,8 @@ db.connect((err) => {
     console.error('Database connection failed:', err.stack);
     return;
   }
-    console.log('Connected to MySql Database.');
-    // Create users table if it doesn't exist
+  console.log('Connected to MySql Database.');
+  // Create users table if it doesn't exist
   db.query(`CREATE TABLE IF NOT EXISTS users (
     id VARCHAR(255) PRIMARY KEY,
     user_type VARCHAR(50) NOT NULL DEFAULT 'user',
@@ -36,8 +36,8 @@ db.connect((err) => {
     password VARCHAR(255),
     provider VARCHAR(50)
   )`);
-    // Create trivia_results table if it doesn't exist
-db.query(`CREATE TABLE IF NOT EXISTS trivia_results (
+  // Create trivia_results table if it doesn't exist
+  db.query(`CREATE TABLE IF NOT EXISTS trivia_results (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id VARCHAR(255),
   question_difficulty VARCHAR(40),
@@ -60,11 +60,11 @@ module.exports = app;
 
 // GitHub Strategy
 passport.use(new GitHubStrategy({
-    clientID: process.env.GITHUB_CLIENT_ID,
-    clientSecret: process.env.GITHUB_CLIENT_SECRET,
-    callbackURL: "http://localhost:3000/auth/github/callback"
-  },
-  function(accessToken, refreshToken, profile, done) {
+  clientID: process.env.GITHUB_CLIENT_ID,
+  clientSecret: process.env.GITHUB_CLIENT_SECRET,
+  callbackURL: `${process.env.SERVER_URL}/auth/github/callback`
+},
+  function (accessToken, refreshToken, profile, done) {
 
     const user = {
       id: profile.id,
@@ -82,7 +82,7 @@ passport.use(new GitHubStrategy({
 
 // GitHub routes
 app.get('/auth/github',
-  passport.authenticate('github', { scope: [ 'user:email' ] })
+  passport.authenticate('github', { scope: ['user:email'] })
 );
 
 // GitHub callback
@@ -94,14 +94,14 @@ app.get('/auth/github/callback', (req, res, next) => {
     }
     if (!user) {
       console.warn('GitHub login failed:', info);
-      return res.redirect('http://localhost:3001/?error=login_failed'); // Changed to React app
+      return res.redirect(`${process.env.CLIENT_URL}/?error=login_failed`); // Changed to React app
     }
     req.logIn(user, (err) => {
       if (err) {
         console.error('GitHub login session error:', err);
         return res.status(500).send('Session error. Please try again.');
       }
-      return res.redirect('http://localhost:3001'); // Changed to React app
+      return res.redirect(process.env.CLIENT_URL); // Changed to React app
     });
   })(req, res, next);
 });
@@ -110,21 +110,21 @@ app.get('/auth/github/callback', (req, res, next) => {
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: '/auth/google/callback'
+  callbackURL: `${process.env.SERVER_URL}/auth/google/callback`
 },
-function(accessToken, refreshToken, profile, done) {
-  const user = {
-    id: profile.id,
-    user_type: 'user',
-    displayName: profile.displayName,
-    email: profile.emails && profile.emails[0] ? profile.emails[0].value : null,
-    provider: profile.provider || 'google'
-  };
-  db.query('REPLACE INTO users SET ?', user, (err) => {
-    if (err) console.error('DB error:', err);
-    return done(null, profile);
-  });
-}
+  function (accessToken, refreshToken, profile, done) {
+    const user = {
+      id: profile.id,
+      user_type: 'user',
+      displayName: profile.displayName,
+      email: profile.emails && profile.emails[0] ? profile.emails[0].value : null,
+      provider: profile.provider || 'google'
+    };
+    db.query('REPLACE INTO users SET ?', user, (err) => {
+      if (err) console.error('DB error:', err);
+      return done(null, profile);
+    });
+  }
 ));
 
 passport.serializeUser((user, done) => done(null, user));
@@ -143,14 +143,14 @@ app.get('/auth/google/callback', (req, res, next) => {
     }
     if (!user) {
       console.warn('Google login failed:', info);
-      return res.redirect('http://localhost:3001/?error=login_failed'); // Changed to React app
+      return res.redirect(`${process.env.CLIENT_URL}/?error=login_failed`); // Changed to React app
     }
     req.logIn(user, (err) => {
       if (err) {
         console.error('Google login session error:', err);
         return res.status(500).send('Session error. Please try again.');
       }
-      return res.redirect('http://localhost:3001'); // Changed to React app
+      return res.redirect(process.env.CLIENT_URL); // Changed to React app
     });
   })(req, res, next);
 });
@@ -164,7 +164,7 @@ function ensureAuthenticated(req, res, next) {
 }
 // Middleware to check for specific user roles
 function requireRole(...roles) {
-  return function(req, res, next) {
+  return function (req, res, next) {
     if (req.isAuthenticated() && roles.includes(req.user.user_type)) {
       return next();
     }
@@ -185,7 +185,7 @@ const swaggerOptions = {
 };
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec)); 
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.get('/get-trivia', async (req, res) => {
   const questionAmount = 1; // Always fetch 1 question at a time
@@ -203,7 +203,7 @@ app.get('/get-trivia', async (req, res) => {
   const url = `https://opentdb.com/api.php?${params.join('&')}`;
   try {
     const response = await axios.get(url);
-      res.json(response.data);
+    res.json(response.data);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -213,7 +213,7 @@ app.get('/get-trivia', async (req, res) => {
 app.post('/save-trivia-result', ensureAuthenticated, (req, res) => {
   const user_id = req.user ? req.user.id : null;
   const { question_difficulty, question_category, question, correct_answer, user_answer, is_correct } = req.body;
-    if (!user_id) return res.status(401).json({ error: 'Not authenticated' });
+  if (!user_id) return res.status(401).json({ error: 'Not authenticated' });
   db.query(
     'INSERT INTO trivia_results (user_id, question_difficulty, question_category, question, correct_answer, user_answer, is_correct) VALUES (?, ?, ?, ?, ?, ?, ?)',
     [user_id, question_difficulty, question_category, question, correct_answer, user_answer, is_correct],
@@ -227,9 +227,9 @@ app.post('/save-trivia-result', ensureAuthenticated, (req, res) => {
 app.post('/save-trivia-answer', ensureAuthenticated, (req, res) => {
   const user_id = req.user ? req.user.id : null;
   const { question_difficulty, question_category, question, correct_answer, user_answer, is_correct } = req.body;
-  
+
   if (!user_id) return res.status(401).json({ error: 'Not authenticated' });
-  
+
   db.query(
     'INSERT INTO trivia_results (user_id, question_difficulty, question_category, question, correct_answer, user_answer, is_correct) VALUES (?, ?, ?, ?, ?, ?, ?)',
     [user_id, question_difficulty, question_category, question, correct_answer, user_answer, is_correct],
@@ -250,13 +250,13 @@ const apiLimiter = rateLimit({
 app.use('/api/', apiLimiter);
 
 app.get('/api/user', (req, res) => {
-    if (!req.isAuthenticated()) return res.status(401).json({
-        error: 'Not authenticated',
-        code: 401,
-        message: 'User is not logged in',
-        help: 'Please log in via Google or GitHub'
-    });
-    res.json({ displayName: req.user.displayName });
+  if (!req.isAuthenticated()) return res.status(401).json({
+    error: 'Not authenticated',
+    code: 401,
+    message: 'User is not logged in',
+    help: 'Please log in via Google or GitHub'
+  });
+  res.json({ displayName: req.user.displayName });
 });
 
 app.get('/api/my-trivia-results', ensureAuthenticated, (req, res) => {
@@ -274,9 +274,9 @@ app.get('/api/my-trivia-results', ensureAuthenticated, (req, res) => {
 app.delete('/api/my-trivia-results/:id', ensureAuthenticated, (req, res) => {
   const user_id = req.user ? req.user.id : null;
   const result_id = req.params.id;
-  
+
   if (!user_id) return res.status(401).json({ error: 'Not authenticated' });
-  
+
   // Only allow users to delete their own results
   db.query(
     'DELETE FROM trivia_results WHERE id = ? AND user_id = ?',
@@ -498,7 +498,15 @@ app.get('/logout', (req, res) => {
       if (err) {
         console.error('Session destruction error:', err);
       }
-      res.redirect('http://localhost:3001'); // Redirect to React app
+      res.redirect(process.env.CLIENT_URL); // Redirect to React app
     });
   });
+});
+
+// Start the server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on http://0.0.0.0:${PORT}`);
+  console.log(`Server URL: ${process.env.SERVER_URL}`);
+  console.log(`Client URL: ${process.env.CLIENT_URL}`);
 });
