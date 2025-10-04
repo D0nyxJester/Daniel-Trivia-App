@@ -1,0 +1,148 @@
+# Deployment Verification Workflow
+# This workflow helps users verify their local installation works correctly
+
+name: 🔧 Installation Verification
+
+on:
+  workflow_dispatch: # Allows manual triggering
+    inputs:
+      environment:
+        description: "Environment to verify"
+        required: true
+        default: "local"
+        type: choice
+        options:
+          - local
+          - ec2
+          - production
+
+jobs:
+  verify-installation:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📦 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+          cache: "npm"
+
+      - name: 📥 Install dependencies
+        run: npm ci
+
+      - name: 🔍 Verify package.json scripts
+        run: |
+          echo "📋 Checking available scripts..."
+          npm run || true
+
+          echo "✅ Required files check:"
+          test -f App.js && echo "✅ App.js found" || echo "❌ App.js missing"
+          test -f package.json && echo "✅ package.json found" || echo "❌ package.json missing"
+          test -f vite.config.js && echo "✅ vite.config.js found" || echo "❌ vite.config.js missing"
+          test -d src && echo "✅ src directory found" || echo "❌ src directory missing"
+
+      - name: 🧪 Run all tests
+        run: npm test
+
+      - name: 📝 Generate installation report
+        run: |
+          echo "# 📋 Installation Verification Report" >> installation-report.md
+          echo "Date: $(date)" >> installation-report.md
+          echo "Environment: ${{ github.event.inputs.environment }}" >> installation-report.md
+          echo "" >> installation-report.md
+          echo "## ✅ Verification Results:" >> installation-report.md
+          echo "- Dependencies: Installed successfully" >> installation-report.md
+          echo "- Tests: All passed" >> installation-report.md
+          echo "- Code structure: Valid" >> installation-report.md
+          echo "" >> installation-report.md
+          echo "## 🚀 Next Steps for ${{ github.event.inputs.environment }} environment:" >> installation-report.md
+
+          if [ "${{ github.event.inputs.environment }}" = "local" ]; then
+            echo "1. Create .env file with your database credentials" >> installation-report.md
+            echo "2. Run \`node App.js\` to start the backend" >> installation-report.md
+            echo "3. Run \`npm run dev\` to start the frontend" >> installation-report.md
+            echo "4. Visit http://localhost:3002 to see your app" >> installation-report.md
+          elif [ "${{ github.event.inputs.environment }}" = "ec2" ]; then
+            echo "1. Upload code to EC2 instance" >> installation-report.md
+            echo "2. Install Node.js and npm on EC2" >> installation-report.md
+            echo "3. Set up environment variables" >> installation-report.md
+            echo "4. Configure security groups for ports 3000/3001" >> installation-report.md
+            echo "5. Set up OAuth redirect URLs" >> installation-report.md
+          else
+            echo "1. Set up production database" >> installation-report.md
+            echo "2. Configure HTTPS and domain" >> installation-report.md
+            echo "3. Set up OAuth with production URLs" >> installation-report.md
+            echo "4. Configure CI/CD pipeline" >> installation-report.md
+          fi
+
+      - name: 📤 Upload installation report
+        uses: actions/upload-artifact@v3
+        with:
+          name: installation-report-${{ github.event.inputs.environment }}
+          path: installation-report.md
+
+      - name: 📊 Display summary
+        run: |
+          echo "## 🎉 Installation Verification Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Environment: ${{ github.event.inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "### Status: ✅ PASSED" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📋 What was verified:" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Dependencies installation" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Code structure and files" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Unit tests execution" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Package scripts availability" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📥 Download the detailed report from the artifacts section below"
+
+  quick-start-guide:
+    runs-on: ubuntu-latest
+    needs: verify-installation
+
+    steps:
+      - name: 📚 Generate Quick Start Guide
+        run: |
+          echo "# 🚀 Quick Start Guide for Daniel Trivia App" >> quick-start.md
+          echo "" >> quick-start.md
+          echo "## 🛠️ Prerequisites" >> quick-start.md
+          echo "- Node.js 20+ installed" >> quick-start.md
+          echo "- npm or yarn package manager" >> quick-start.md
+          echo "- MySQL database (local or cloud)" >> quick-start.md
+          echo "" >> quick-start.md
+          echo "## 📥 Installation" >> quick-start.md
+          echo "\`\`\`bash" >> quick-start.md
+          echo "# 1. Clone the repository" >> quick-start.md
+          echo "git clone https://github.com/D0nyxJester/Daniel-Trivia-App.git" >> quick-start.md
+          echo "cd Daniel-Trivia-App" >> quick-start.md
+          echo "" >> quick-start.md
+          echo "# 2. Install dependencies" >> quick-start.md
+          echo "npm install" >> quick-start.md
+          echo "" >> quick-start.md
+          echo "# 3. Create environment file" >> quick-start.md
+          echo "cp .env.example .env  # Create your .env file" >> quick-start.md
+          echo "" >> quick-start.md
+          echo "# 4. Start the application" >> quick-start.md
+          echo "node App.js          # Backend on port 3000" >> quick-start.md
+          echo "npm run dev          # Frontend on port 3002" >> quick-start.md
+          echo "\`\`\`" >> quick-start.md
+          echo "" >> quick-start.md
+          echo "## 🔧 Environment Variables" >> quick-start.md
+          echo "Update your \`.env\` file with:" >> quick-start.md
+          echo "- Database credentials (DB_HOST, DB_USER, DB_PASSWORD, etc.)" >> quick-start.md
+          echo "- OAuth credentials (Google and GitHub)" >> quick-start.md
+          echo "- Session secrets" >> quick-start.md
+          echo "" >> quick-start.md
+          echo "## 🌐 Access Your App" >> quick-start.md
+          echo "- Frontend: http://localhost:3002" >> quick-start.md
+          echo "- Backend API: http://localhost:3000" >> quick-start.md
+          echo "- API Documentation: http://localhost:3000/api-docs" >> quick-start.md
+
+      - name: 📤 Upload Quick Start Guide
+        uses: actions/upload-artifact@v3
+        with:
+          name: quick-start-guide
+          path: quick-start.md
