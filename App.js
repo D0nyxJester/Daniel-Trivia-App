@@ -94,14 +94,14 @@ app.get('/auth/github/callback', (req, res, next) => {
     }
     if (!user) {
       console.warn('GitHub login failed:', info);
-      return res.redirect(`http://localhost:3001/?error=login_failed`); // Changed to localhost
+      return res.redirect(`${process.env.FRONTEND_URL}/?error=login_failed`);
     }
     req.logIn(user, (err) => {
       if (err) {
         console.error('GitHub login session error:', err);
         return res.status(500).send('Session error. Please try again.');
       }
-      return res.redirect('http://localhost:3001'); // Changed to localhost
+      return res.redirect(process.env.FRONTEND_URL);
     });
   })(req, res, next);
 });
@@ -143,14 +143,14 @@ app.get('/auth/google/callback', (req, res, next) => {
     }
     if (!user) {
       console.warn('Google login failed:', info);
-      return res.redirect(`http://localhost:3001/?error=login_failed`); // Changed to localhost
+      return res.redirect(`${process.env.FRONTEND_URL}/?error=login_failed`);
     }
     req.logIn(user, (err) => {
       if (err) {
         console.error('Google login session error:', err);
         return res.status(500).send('Session error. Please try again.');
       }
-      return res.redirect('http://localhost:3001'); // Changed to localhost
+      return res.redirect(process.env.FRONTEND_URL);
     });
   })(req, res, next);
 });
@@ -498,7 +498,7 @@ app.get('/logout', (req, res) => {
       if (err) {
         console.error('Session destruction error:', err);
       }
-      res.redirect('http://localhost:3000'); // Redirect to localhost
+      res.redirect(process.env.FRONTEND_URL);
     });
   });
 });
