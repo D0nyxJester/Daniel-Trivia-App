@@ -1,0 +1,7 @@
+version = 0.1
+
+[default.build.parameters]
+template_file = "c:\\Users\\danie\\danielapp\\template.yaml"
+cached = true
+parallel = true
+use_container = true

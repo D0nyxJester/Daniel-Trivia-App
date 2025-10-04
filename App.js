@@ -62,7 +62,7 @@ module.exports = app;
 passport.use(new GitHubStrategy({
   clientID: process.env.GITHUB_CLIENT_ID,
   clientSecret: process.env.GITHUB_CLIENT_SECRET,
-  callbackURL: `${process.env.SERVER_URL}/auth/github/callback`
+  callbackURL: `http://localhost:3000/auth/github/callback`
 },
   function (accessToken, refreshToken, profile, done) {
 
@@ -94,14 +94,14 @@ app.get('/auth/github/callback', (req, res, next) => {
     }
     if (!user) {
       console.warn('GitHub login failed:', info);
-      return res.redirect(`${process.env.CLIENT_URL}/?error=login_failed`); // Changed to React app
+      return res.redirect(`http://localhost:3001/?error=login_failed`); // Changed to localhost
     }
     req.logIn(user, (err) => {
       if (err) {
         console.error('GitHub login session error:', err);
         return res.status(500).send('Session error. Please try again.');
       }
-      return res.redirect(process.env.CLIENT_URL); // Changed to React app
+      return res.redirect('http://localhost:3001'); // Changed to localhost
     });
   })(req, res, next);
 });
@@ -110,7 +110,7 @@ app.get('/auth/github/callback', (req, res, next) => {
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: `${process.env.SERVER_URL}/auth/google/callback`
+  callbackURL: `http://localhost:3000/auth/google/callback`
 },
   function (accessToken, refreshToken, profile, done) {
     const user = {
@@ -143,14 +143,14 @@ app.get('/auth/google/callback', (req, res, next) => {
     }
     if (!user) {
       console.warn('Google login failed:', info);
-      return res.redirect(`${process.env.CLIENT_URL}/?error=login_failed`); // Changed to React app
+      return res.redirect(`http://localhost:3001/?error=login_failed`); // Changed to localhost
     }
     req.logIn(user, (err) => {
       if (err) {
         console.error('Google login session error:', err);
         return res.status(500).send('Session error. Please try again.');
       }
-      return res.redirect(process.env.CLIENT_URL); // Changed to React app
+      return res.redirect('http://localhost:3001'); // Changed to localhost
     });
   })(req, res, next);
 });
@@ -498,7 +498,7 @@ app.get('/logout', (req, res) => {
       if (err) {
         console.error('Session destruction error:', err);
       }
-      res.redirect(process.env.CLIENT_URL); // Redirect to React app
+      res.redirect('http://localhost:3000'); // Redirect to localhost
     });
   });
 });
@@ -507,6 +507,4 @@ app.get('/logout', (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on http://0.0.0.0:${PORT}`);
-  console.log(`Server URL: ${process.env.SERVER_URL}`);
-  console.log(`Client URL: ${process.env.CLIENT_URL}`);
 });
